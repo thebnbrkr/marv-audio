@@ -1,0 +1,23 @@
+[project]
+name = "marv-audio"
+version = "0.1.0"
+license = { text = "MIT" }
+description = "MARV for speech models: exact residual-stream tracing and edits on Whisper."
+requires-python = ">=3.10"
+dependencies = [
+    "marv",
+    "torch>=2.1",
+    "transformers>=4.40",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+experiments = ["pyarrow>=14", "huggingface_hub>=0.20"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["marv_audio*"]
