@@ -21,6 +21,23 @@ and `proj_out` shares its weights with the token embedding. Only the decoder
 is covered. Encoder features need labels from the audio itself (phonemes,
 silence, noise), not a logit lens.
 
+## Notebooks (Colab, free CPU)
+
+| notebook | what |
+|---|---|
+| [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/thebnbrkr/marv-audio/blob/main/notebooks/01_tutorial_whisper.ipynb) `01_tutorial_whisper` | tutorial: transcribe a clip, check the writes add up, split each token into listening vs guessing, language ID, switch off neurons |
+| [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/thebnbrkr/marv-audio/blob/main/notebooks/02_reproduce_experiments.ipynb) `02_reproduce_experiments` | rerun E1 and E2 and plot them |
+| [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/thebnbrkr/marv-audio/blob/main/notebooks/tests_colab.ipynb) `tests_colab` | the test suite plus exactness checks on real whisper-tiny |
+
+## Install
+
+```bash
+pip install "marv-audio[experiments] @ git+https://github.com/thebnbrkr/marv-audio"
+```
+
+This pulls MARV from GitHub. Don't `pip install marv`: that name on PyPI is an
+unrelated robotics project.
+
 ## Quick start
 
 ```python
@@ -35,7 +52,7 @@ inputs = marv_audio.whisper_inputs(proc, audio, ids)        # audio: float32 at 
 
 marv.decompose_logit(model, None, inputs, target=ids[-1]).show()   # rows add up exactly
 splits = marv_audio.listening_split(model, inputs)                 # per token: embed / self_attn / cross_attn / mlp / bias
-marv_audio.language_logits(model, proc, audio)                     # language ID, read after <|startoftranscript|> only
+marv_audio.language_probs(model, proc, audio)                      # language ID over all languages, read after <|startoftranscript|> only
 ```
 
 ## First results (E1, E2; see `PREDICTIONS.md`)
@@ -64,18 +81,20 @@ python scripts/audio_routes.py         # E2, same clips
 
 ```
 marv_audio/
+  data.py      librispeech_clips: a small LibriSpeech sample (soundfile, any OS)
   whisper.py   WhisperDecoderAdapter (registered on import), whisper_inputs,
-               prompt_ids, language_logits
+               prompt_ids, language_probs
   listen.py    listening_split: exact per-token direct split, one forward pass
 scripts/listen_vs_guess.py   E1: listening vs guessing
 scripts/audio_routes.py      E2: which writes relay the audio
 tests/test_whisper_exact.py  tiny random Whisper, no network: every decomposition exact
+notebooks/                   Colab: tutorial, reproduction, tests
 ```
 
 ## Test
 
 ```bash
-pip install -e git+https://github.com/thebnbrkr/marv#egg=marv   # or pip install -e ../marv
+pip install -e ".[dev,experiments]"   # pulls MARV from GitHub
 python -m pytest -q
 ```
 

@@ -101,12 +101,18 @@ def prompt_ids(processor, language: str = "en", task: str = "transcribe", timest
     return ids
 
 
-def language_logits(model, processor, audio, languages=("en", "zh", "de", "es", "fr")) -> dict[str, float]:
+def language_probs(model, processor, audio) -> dict[str, float]:
     """Language identification as Whisper does it: the next-token logits after
-    <|startoftranscript|> ALONE, read at the language tokens. Putting a
-    language token in the input first would hand the model the answer."""
+    <|startoftranscript|> ALONE, softmaxed over every language token the
+    tokenizer has (not just a chosen few), sorted most likely first. Putting
+    a language token in the input first would hand the model the answer."""
+    from transformers.models.whisper.tokenization_whisper import LANGUAGES
+
     tok = processor.tokenizer
+    codes = [c for c in LANGUAGES if tok.convert_tokens_to_ids(f"<|{c}|>") != tok.unk_token_id]
+    ids = torch.tensor([tok.convert_tokens_to_ids(f"<|{c}|>") for c in codes])
     inputs = whisper_inputs(processor, audio, [tok.convert_tokens_to_ids("<|startoftranscript|>")])
     with torch.no_grad():
-        logits = model(**inputs).logits[0, -1]
-    return {lang: float(logits[tok.convert_tokens_to_ids(f"<|{lang}|>")]) for lang in languages}
+        logits = model(**inputs).logits[0, -1].float()
+    probs = torch.softmax(logits[ids], -1)
+    return dict(sorted(((c, float(p)) for c, p in zip(codes, probs)), key=lambda kv: -kv[1]))

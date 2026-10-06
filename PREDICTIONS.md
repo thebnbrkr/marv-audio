@@ -137,3 +137,26 @@ numbers measure different things. E1's share is of the whole logit, most of
 which is the language prior that is there with or without audio; E2's is of
 the change the audio makes. E1's prediction (direct share below 50%) still
 stands as measured; the interpretation attached to it does not.
+
+## Notes from an external review (2026-10-06)
+
+**Pre-registration trail.** E1 and E2 were each registered and resolved in
+the same commit, so git cannot show the predictions came first. From E3 on,
+PREDICTIONS.md is committed before the experiment runs; the commit
+timestamp is the evidence.
+
+**E1 P4, stress-tested.** The 0.72 correlation could have reflected tokens
+with large logits having large everything. Controlling for the logit size
+(partial Spearman, ranks residualised on `actual`) gives 0.78; using the
+cross-attention *share* instead of its contribution gives 0.75. Recomputed
+from `results/e1_listen_vs_guess.json`. P4 holds.
+
+**E1 P3, the inference does not follow (second note).** P3's registered
+criteria compared a fraction (direct share of the logit, 30%) with an
+absolute amount (4.6 nats), so they never tested "understates". On a common
+scale the medians are similar: direct cross-attention contribution 5.7 logit
+units, total silence effect 4.6 nats (not identical units, and
+cross-attention writes something on silence too). E2's 84% direct share
+already contradicted the inference. The matched-units test is the
+difference of two exact splits (real clip minus silence, same tokens), which
+adds up exactly; it is a candidate for E3.

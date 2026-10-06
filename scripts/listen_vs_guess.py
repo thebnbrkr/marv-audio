@@ -4,18 +4,14 @@ listening to the audio, and how much from guessing from the text so far.
     python scripts/listen_vs_guess.py            # 20 LibriSpeech clips, CPU, ~1 min
 
 Downloads whisper-tiny (~150 MB) and a 9 MB LibriSpeech sample. Decodes FLAC
-with macOS `afconvert`, so no audio libraries are needed.
+with soundfile (falls back to macOS `afconvert`).
 """
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
-import subprocess
 import sys
-import tempfile
-import wave
 from pathlib import Path
 
 import numpy as np
@@ -23,31 +19,14 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from marv_audio import listening_split, prompt_ids, whisper_inputs  # noqa: E402
+from marv_audio import librispeech_clips, listening_split, prompt_ids, whisper_inputs  # noqa: E402
 
 MODEL = "openai/whisper-tiny"
 REVISION = "169d4a4341b33bc18d8881c4b69c2e104e1cc0af"
-DATA_REPO = "hf-internal-testing/librispeech_asr_dummy"
-DATA_FILE = "clean/validation-00000-of-00001.parquet"
 
 
 def load_clips(n: int):
-    import pyarrow.parquet as pq
-
-    from huggingface_hub import hf_hub_download
-
-    path = hf_hub_download(DATA_REPO, DATA_FILE, repo_type="dataset")
-    table = pq.read_table(path).to_pylist()[:n]
-    clips = []
-    with tempfile.TemporaryDirectory() as tmp:
-        for i, row in enumerate(table):
-            src, dst = os.path.join(tmp, f"{i}.flac"), os.path.join(tmp, f"{i}.wav")
-            open(src, "wb").write(row["audio"]["bytes"])
-            subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16@16000", src, dst], check=True)
-            with wave.open(dst) as w:
-                pcm = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16)
-            clips.append((pcm.astype(np.float32) / 32768.0, row["text"]))
-    return clips
+    return librispeech_clips(n)
 
 
 @torch.no_grad()

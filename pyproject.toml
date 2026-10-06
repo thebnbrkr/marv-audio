@@ -5,7 +5,8 @@ license = { text = "MIT" }
 description = "MARV for speech models: exact residual-stream tracing and edits on Whisper."
 requires-python = ">=3.10"
 dependencies = [
-    "marv",
+    # NOT the PyPI "marv" (an unrelated robotics framework)
+    "marv @ git+https://github.com/thebnbrkr/marv",
     "torch>=2.1",
     "transformers>=4.40",
     "numpy>=1.24",
@@ -13,7 +14,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
-experiments = ["pyarrow>=14", "huggingface_hub>=0.20"]
+experiments = ["pyarrow>=14", "huggingface_hub>=0.20", "soundfile>=0.12"]
 
 [build-system]
 requires = ["setuptools>=68"]
