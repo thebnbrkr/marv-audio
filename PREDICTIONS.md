@@ -189,3 +189,30 @@ relay. *Refuted if* ≥ 30%.
 **P4 (logit units track log-probability).** Across tokens, Δactual and E1's
 total effect (Δ log p) are rank-correlated with Spearman above 0.7.
 *Refuted if* ≤ 0.7.
+
+### E3 outcomes (run 2026-10-06 after commit 0a29c15, CPU, `results/e3_matched_split.json`)
+
+571 tokens; MARV `0.2.0+d405551` (recorded in the results file). Σ Δactual =
+5638 logit units (median per token 9.6).
+
+**P1 — CONFIRMED.** Largest split check error 1.9e-05; largest gap between the
+summed Δ parts and Δactual 3.2e-05.
+
+**P2 — CONFIRMED.** Δcross_attn = **123%** of Σ Δactual.
+
+**P3 — CONFIRMED as worded, but the wording missed the sign.** Δmlp = **−25%**.
+The MLP writes push the scored token *less* with the real audio than on
+silence. The prediction ("below 30%") assumed a small positive relay; a
+negative share satisfies it without testing that. What it shows: on silence
+the MLPs supply more of the push toward the (now unheard) token, and with
+audio, cross-attention supplies more than all of it while the MLPs back off.
+The LayerNorm-scale caveat applies: part of each Δ is rescaling.
+
+**P4 — CONFIRMED.** Spearman 0.90 between Δactual and E1's Δ log p.
+
+The bias row's Δ is exactly 0: the LayerNorm bias contributes the same
+amount in both runs. Self-attention 1.4%, embedding 0.2%.
+
+Together with E2: the audio's effect is carried by cross-attention, both
+causally (E2, 84% through the direct route) and in matched direct units (E3,
+123%), with the MLPs partly offsetting it rather than relaying it.

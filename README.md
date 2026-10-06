@@ -71,10 +71,14 @@ On whisper-tiny over 20 LibriSpeech clips (571 tokens, every split exact to
   directly through the cross-attention writes, and only 12–16% is relayed by
   later MLPs (E2). The last decoder layer's cross-attention matters most:
   removing it alone costs 40% of the audio effect for the median token.
+- In matched units (E3: the exact split on the real clip minus the split on
+  silence), cross-attention accounts for 123% of the change and the MLPs for
+  −25%: without audio the MLPs guess harder, with audio they back off.
 
 ```bash
 python scripts/listen_vs_guess.py      # E1, ~1 min on a laptop CPU; downloads ~160 MB
 python scripts/audio_routes.py         # E2, same clips
+python scripts/matched_split.py        # E3, same clips
 ```
 
 ## Layout
@@ -87,6 +91,7 @@ marv_audio/
   listen.py    listening_split: exact per-token direct split, one forward pass
 scripts/listen_vs_guess.py   E1: listening vs guessing
 scripts/audio_routes.py      E2: which writes relay the audio
+scripts/matched_split.py     E3: the audio's effect split exactly in matched units
 tests/test_whisper_exact.py  tiny random Whisper, no network: every decomposition exact
 notebooks/                   Colab: tutorial, reproduction, tests
 ```
