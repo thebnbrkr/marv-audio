@@ -216,3 +216,12 @@ amount in both runs. Self-attention 1.4%, embedding 0.2%.
 Together with E2: the audio's effect is carried by cross-attention, both
 causally (E2, 84% through the direct route) and in matched direct units (E3,
 123%), with the MLPs partly offsetting it rather than relaying it.
+
+## Independent reproduction of E1 and E2 (2026-10-06)
+
+Rerun on Colab with `notebooks/02_reproduce_experiments.ipynb`: Linux, torch
+and BLAS differing from the original Mac run, FLAC decoded with soundfile
+instead of afconvert. Every number matches the recorded outcomes to about six
+significant figures (E1: max check 1.4e-06, WER 0.12152, median total effect
+4.559548 nats, Spearman 0.72304; E2: swap sanity 0.0, direct share 0.839015,
+last layer 0.400343). All prediction outcomes are unchanged.
