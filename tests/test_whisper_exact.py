@@ -126,3 +126,20 @@ def test_trace_by_depth_starts_at_exactly_one():
 def test_a_string_prompt_is_refused():
     with pytest.raises(TypeError, match="audio"):
         capture_writes(tiny_whisper(), None, "hello")
+
+
+def test_ffn_input_and_activations_are_read_where_the_mlp_sees_them():
+    from marv.context import feature_activations_at_layers, hidden_states_at_layers
+
+    m = tiny_whisper()
+    seen = {}
+    h = m.model.decoder.layers[1].final_layer_norm.register_forward_hook(
+        lambda _m, _i, o: seen.__setitem__("x", o[0, -1].detach()))
+    with torch.no_grad():
+        m(**inputs())
+    h.remove()
+    x = torch.as_tensor(hidden_states_at_layers(m, None, inputs(), [1])[1])
+    torch.testing.assert_close(x, seen["x"])
+    a = feature_activations_at_layers(m, None, inputs(), [1])[1]
+    blk = m.model.decoder.layers[1]
+    torch.testing.assert_close(torch.as_tensor(a), blk.activation_fn(blk.fc1(x)).detach())

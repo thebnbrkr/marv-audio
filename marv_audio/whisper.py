@@ -58,6 +58,9 @@ class WhisperDecoderAdapter(ArchAdapter):
             return blk.fc2  # fc2's output (bias included) is the MLP's whole write
         raise ValueError(f"part must be one of {self.parts}, got {part!r}")
 
+    def ffn_in(self, model, layer: int) -> nn.Module:
+        return model.model.decoder.layers[layer].fc1  # its input is final_layer_norm(h)
+
     def ffn_out(self, model, layer: int) -> nn.Linear:
         return model.model.decoder.layers[layer].fc2
 

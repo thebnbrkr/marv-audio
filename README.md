@@ -38,7 +38,7 @@ splits = marv_audio.listening_split(model, inputs)                 # per token: 
 marv_audio.language_logits(model, proc, audio)                     # language ID, read after <|startoftranscript|> only
 ```
 
-## First result (E1, `PREDICTIONS.md`)
+## First results (E1, E2; see `PREDICTIONS.md`)
 
 On whisper-tiny over 20 LibriSpeech clips (571 tokens, every split exact to
 1e-6):
@@ -49,13 +49,15 @@ On whisper-tiny over 20 LibriSpeech clips (571 tokens, every split exact to
   (" Fred": 15 nats).
 - Word starts depend on the audio more than word continuations (6.0 vs 3.6
   nats median).
-- Cross-attention's **direct** share of a token's logit is only about 30%, yet
-  removing the audio costs 4.6 nats. So the direct split alone understates how
-  much the model listens, and the silence comparison is needed alongside it.
-  Which later writes relay the audio is the next experiment (E2).
+- Most of each token's logit is language prior: cross-attention's direct share
+  of the whole logit is about 30%. But of the *change* the audio makes, 84% acts
+  directly through the cross-attention writes, and only 12–16% is relayed by
+  later MLPs (E2). The last decoder layer's cross-attention matters most:
+  removing it alone costs 40% of the audio effect for the median token.
 
 ```bash
-python scripts/listen_vs_guess.py      # ~1 min on a laptop CPU; downloads ~160 MB
+python scripts/listen_vs_guess.py      # E1, ~1 min on a laptop CPU; downloads ~160 MB
+python scripts/audio_routes.py         # E2, same clips
 ```
 
 ## Layout
@@ -65,7 +67,8 @@ marv_audio/
   whisper.py   WhisperDecoderAdapter (registered on import), whisper_inputs,
                prompt_ids, language_logits
   listen.py    listening_split: exact per-token direct split, one forward pass
-scripts/listen_vs_guess.py   E1
+scripts/listen_vs_guess.py   E1: listening vs guessing
+scripts/audio_routes.py      E2: which writes relay the audio
 tests/test_whisper_exact.py  tiny random Whisper, no network: every decomposition exact
 ```
 
