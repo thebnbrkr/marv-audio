@@ -160,3 +160,32 @@ cross-attention writes something on silence too). E2's 84% direct share
 already contradicted the inference. The matched-units test is the
 difference of two exact splits (real clip minus silence, same tokens), which
 adds up exactly; it is a candidate for E3.
+
+## E3: the audio's effect in matched units (registered 2026-10-06, committed before the run)
+
+Setup as E1 and E2 (same 20 clips, same teacher-forced transcripts, same 1 s
+silence). Script: `scripts/matched_split.py`. For each token, `listening_split`
+runs on the real clip and on silence, scoring the same token at the same
+position. Each split adds up exactly to that run's logit − mean logit, so the
+difference does too:
+
+    Δactual = Δembed + Δself_attn + Δcross_attn + Δmlp + Δbias
+
+These are DIRECT effects in logit units, the matched-units counterpart of E2's
+causal routes. Caveat: the final LayerNorm's scale differs between the two
+runs, so part of every Δ is rescaling rather than new content. Shares below
+are sums over all tokens (Σ Δpart / Σ Δactual).
+
+**P1 (exact).** Every split's check error is below 1e-4, and the Δ parts add
+up to Δactual within 1e-3 logit units for every token. *Refuted if* either
+fails, and then nothing else is reported.
+
+**P2 (cross-attention carries most of it).** Δcross_attn's share of Σ Δactual
+is above 50%. Basis: E2's 84% direct route. *Refuted if* ≤ 50%.
+
+**P3 (MLPs a minority).** Δmlp's share is below 30%. Basis: E2's 12–16% MLP
+relay. *Refuted if* ≥ 30%.
+
+**P4 (logit units track log-probability).** Across tokens, Δactual and E1's
+total effect (Δ log p) are rank-correlated with Spearman above 0.7.
+*Refuted if* ≤ 0.7.
