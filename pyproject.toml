@@ -6,7 +6,7 @@ description = "MARV for speech models: exact residual-stream tracing and edits o
 requires-python = ">=3.10"
 dependencies = [
     # NOT the PyPI "marv" (an unrelated robotics framework)
-    "marv @ git+https://github.com/thebnbrkr/marv",
+    "marv @ git+https://github.com/thebnbrkr/marv@v0.2.0",  # pinned; bump deliberately
     "torch>=2.1",
     "transformers>=4.40",
     "numpy>=1.24",
